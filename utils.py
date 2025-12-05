@@ -7,10 +7,8 @@ import numpy as np
 import geopandas as gpd
 from geopandas.array import GeometryArray
 import pandas as pd
-from pyproj import Transformer
 import shapely
-from shapely import wkt
-from shapely.geometry import MultiPolygon, Polygon
+from shapely import wkt, MultiPolygon, Point
 
 URL_ESA_S2_GRID_KML = "https://sentiwiki.copernicus.eu/__attachments/1692737/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.zip"
 URL_NE_VEC_10m_LAND_GEOJSON = "https://github.com/nvkelso/natural-earth-vector/raw/v5.1.2/geojson/ne_10m_land.geojson"
@@ -116,6 +114,8 @@ if __name__=='__main__':
 
     gdf = gdf.rename(columns={"Name": "tile"})
 
+    gdf['geometry'] = gdf.geometry.apply(lambda x: MultiPolygon([g for g in x.geoms if not isinstance(g, Point)]))
+
     # Extract UTM_WKT and EPSG from "Description" column
     gdf['epsg'] = gdf.apply(get_epsg, axis=1)
     gdf['utm_wkt'] = gdf.apply(get_utm_wkt, axis=1)
@@ -127,6 +127,7 @@ if __name__=='__main__':
         .apply(lambda x: wkt.loads(x).bounds)
         .apply(pd.Series)
     )
+
 
     gdf = gdf.drop(columns=['Description'])
     gdf.to_parquet("sentinel-2-grid.parquet")
