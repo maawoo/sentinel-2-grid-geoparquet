@@ -8,7 +8,7 @@ import geopandas as gpd
 from geopandas.array import GeometryArray
 import pandas as pd
 import shapely
-from shapely import wkt, MultiPolygon, Point
+from shapely import wkt, MultiPolygon, Point, Polygon
 
 URL_ESA_S2_GRID_KML = "https://sentiwiki.copernicus.eu/__attachments/1692737/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.zip"
 URL_NE_VEC_10m_LAND_GEOJSON = "https://github.com/nvkelso/natural-earth-vector/raw/v5.1.2/geojson/ne_10m_land.geojson"
@@ -93,6 +93,14 @@ def union_query_strtree(
         return np.unique(np.concatenate(all_indices))
 
 
+def handle_multipolygons_and_polygons(geom):
+    polys = [g for g in geom if not isinstance(g, Point)]
+    if len(polys) == 1:
+        return Polygon(polys[0])
+    else:
+        return MultiPolygon(polys)
+
+
 if __name__=='__main__':
     # Load KML file directly from URL
     url = URL_ESA_S2_GRID_KML
@@ -113,14 +121,13 @@ if __name__=='__main__':
     )
 
     gdf = gdf.rename(columns={"Name": "tile"})
-
-    gdf['geometry'] = gdf.geometry.apply(lambda x: MultiPolygon([g for g in x.geoms if not isinstance(g, Point)]))
-    gdf['center'] = gdf.geometry.apply(lambda x: [g for g in x.geoms if isinstance(g, Point)][0])
     
+    gdf['center'] = gdf.geometry.apply(lambda x: [g for g in x.geoms if isinstance(g, Point)][0])
+    gdf['geometry'] = gdf.geometry.apply(lambda x: handle_multipolygons_and_polygons(x.geoms))
+   
     # Extract UTM_WKT and EPSG from "Description" column
     gdf['epsg'] = gdf.apply(get_epsg, axis=1)
     gdf['utm_wkt'] = gdf.apply(get_utm_wkt, axis=1)
-
 
     # Add simple UTM bounds (left, down, right, up)
     gdf[["utm_left", "utm_down", "utm_right", "utm_up"]] = (
@@ -128,7 +135,6 @@ if __name__=='__main__':
         .apply(lambda x: wkt.loads(x).bounds)
         .apply(pd.Series)
     )
-
 
     gdf = gdf.drop(columns=['Description'])
     gdf.to_parquet("sentinel-2-grid.parquet")
