@@ -115,7 +115,8 @@ if __name__=='__main__':
     gdf = gdf.rename(columns={"Name": "tile"})
 
     gdf['geometry'] = gdf.geometry.apply(lambda x: MultiPolygon([g for g in x.geoms if not isinstance(g, Point)]))
-
+    gdf['center'] = gdf.geometry.apply(lambda x: [g for g in x.geoms if isinstance(g, Point)][0])
+    
     # Extract UTM_WKT and EPSG from "Description" column
     gdf['epsg'] = gdf.apply(get_epsg, axis=1)
     gdf['utm_wkt'] = gdf.apply(get_utm_wkt, axis=1)
