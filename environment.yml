@@ -3,9 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.10
-  - geopandas>=0.14
-  - dask-geopandas>=0.3.0
-  - dask==2024.2.1  # https://github.com/geopandas/dask-geopandas/issues/284
-  - libgdal-arrow-parquet
+  - geopandas
+  - pyarrow
   - pyogrio
   - jupyterlab
