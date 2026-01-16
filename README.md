@@ -79,12 +79,3 @@ epsg: Integer64 (0.0)
 utm_wkt: String (0.0)
 utm_bounds: String (0.0)
 ```
-
-## Is the Sentinel-2 grid a good solution for my use case?
-
-I will not be able to answer this of course, and it depends on your specific use case.
-However, I wanted to leave this [publication](https://doi.org/10.1016/j.isprsjprs.2023.07.015) 
-by Bauer-Marschallinger & Falkner (2023) here to advocate for alternative grid systems such
-as the [Equi7 grid](https://github.com/TUW-GEO/Equi7Grid). With more and more Earth Observation
-data being available, we as a community need to move forward and innovate in the way we access and
-process this huge volume of data. 
